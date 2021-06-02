@@ -24,8 +24,10 @@ try
     elseif strcmp(tag, 'HED')
         output = 1.1;
     end
-catch ME
-   warning('Problem using function.  Assigning a value of 0.');
+catch
+    message = 'Problem using function.';
+    disp(message);
+    output = 0.5;
 end
     
 end

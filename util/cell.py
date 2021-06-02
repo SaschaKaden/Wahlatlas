@@ -2,18 +2,13 @@ from util.reader import SinusType
 
 
 class Cell:
-    def __init__(self, pixel, potential, sinus, x, y):
-        self.pixel = pixel
-        self.potential = potential
-        self.sinus = sinus
-        self.hash_value = str(pixel) + str(potential) + str(self.sinus)
-        self.x = x
-        self.y = y
+    def __init__(self, id_value):
+        self.id_value = id_value
+        self.pixel = -1
+        self.potential = 0.0
+        self.sinus = SinusType.UNDEFINED
+        self.x = 99999999
+        self.y = 99999999
 
-    pixel = -1
-    potential = 0.0
-    sinus = SinusType.UNDEFINED
-    x = 99999999
-    y = 99999999
 
 

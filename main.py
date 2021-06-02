@@ -1,33 +1,19 @@
-import numpy as np
-import cv2
-from PIL import ImageGrab
-import pyautogui
 from util import reader
 from util import util
 from util.cell import Cell
-import time
-import json
 import jsonpickle
+import pyautogui
+from bs4 import BeautifulSoup
+import glob
 
 show_mouse_pos = False
+through_atlas = False
+read_htmls = True
 
 if __name__ == "__main__":
     print("Datei wurde direkt aufgerufen und die Main wird ausgeführt")
 else:
     print("Datei wurde als Modul aufgerufen")
-
-# img = ImageGrab.grab(bbox=(100, 10, 400, 780)) #bbox specifies specific region (bbox= x,y,width,height)
-# img_np = np.array(img)
-# frame = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
-# cv2.imshow("test", frame)
-# cv2.waitKey(0)
-# print(reader.read_text(img))
-#
-# pyautogui.click(100, 100)
-# pyautogui.moveTo(100, 150)
-# pyautogui.moveRel(0, 10)  # move mouse 10 pixels down
-# pyautogui.dragTo(100, 150)
-# pyautogui.dragRel(0, 10)  # drag mouse 10 pixels down
 
 if show_mouse_pos:
     pos = pyautogui.position()
@@ -37,23 +23,66 @@ if show_mouse_pos:
             print(new_pos)
         pos = new_pos
 
-cells = []
+if through_atlas:
+    count = 0
+    x_start = 80
+    x_end = 1610
+    y_start = 110
+    y_end = 200  # 1080
+    pyautogui.PAUSE = 0.8
 
-for y in range(110, 1640, 5):
-    for x in range(320, 1640, 10):
-        pyautogui.moveTo(x, y)
-        pyautogui.click(x, y)
-        time.sleep(3)
-        if reader.read_pixel() > 0:
-            cell = Cell(reader.read_pixel(), reader.read_potential(), reader.read_sinus(), x, y)
+    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
+    pyautogui.click(x_end, y_end)
+    pyautogui.dragTo(x_start, y_end, 2, button='left')
+    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
+    pyautogui.click(x_start, y_end)
+    pyautogui.dragTo(x_start, y_start, 2, button='left')
+    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
+    pyautogui.click(x_start, y_start)
+    pyautogui.dragTo(x_end, y_start, 2, button='left')
+    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
+
+if read_htmls:
+    cells = []
+    filenames = glob.glob("C:/Users/sascha/Downloads/wahlatlas/*.html")
+    for filename in filenames:
+        html_file = open(filename, "r")
+        html_data = html_file.read()
+        html_file.close()
+
+        soup = BeautifulSoup(html_data, 'html.parser')
+        pixel_span = soup.find("span", id="hoverWahlberechtigtePixel")
+        potential_span = soup.find("span", id="hoverPotentialScore21wk")
+        sinus_span = soup.find("span", id="hoverPotentialSinus")
+        id_span = soup.find("span", id="quelle")
+        table = soup.find("table", id="partiesTable")
+        if pixel_span.text != "":
+            for row in table.findAll('tr'):
+                td_tags = row.find_all('td')
+                if len(td_tags) > 0:
+                    if "GR" in td_tags[0].get('title'):
+                        gruene_pixel = td_tags[1].contents[1]
+
+        if id_span is None:
+            continue
+        cell = Cell(id_span.string[11:])
+        cell.x = float(id_span.string.split("E", 1)[1])  # E is x
+        cell.y = float(id_span.string.split("N", 1)[1].split("E", 1)[0])  # N is y
+
+        if pixel_span.string is None or len(pixel_span.string) == 0:
             cells.append(cell)
+            continue
 
-        if len(cells) % 10 == 0:
-            jsonStr = jsonpickle.encode(cells)
-            text_file = open("Output.json", "w")
-            text_file.write(jsonStr)
-            text_file.close()
-            print(jsonStr)
+        cell.pixel = float(pixel_span.string[35:])
+        cell.sinus = reader.identify_sinus(sinus_span.string)
+        cell.potential = float(potential_span.string[30:].replace(',', '.'))
+        cells.append(cell)
+
+    jsonStr = jsonpickle.encode(cells)
+    text_file = open("Output.json", "w")
+    text_file.write(jsonStr)
+    text_file.close()
+    print(jsonStr)
 
 
 
