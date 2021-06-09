@@ -1,88 +1,94 @@
 from util import reader
-from util import util
 from util.cell import Cell
 import jsonpickle
-import pyautogui
 from bs4 import BeautifulSoup
 import glob
+import requests
+import numpy as np
+import time
 
-show_mouse_pos = False
-through_atlas = False
-read_htmls = True
 
-if __name__ == "__main__":
-    print("Datei wurde direkt aufgerufen und die Main wird ausgeführt")
-else:
-    print("Datei wurde als Modul aufgerufen")
+read_htmls = False
+cookies = {'PHPSESSID': '41d5jkn0hn5fsm25mn8jut90f3', 'SimpleSAML': 'a765cf9dcf00ff6629d93a0f0e3ba238', 'SimpleSAMLAuthToken': '_0898fdba20d9f49ec061dfc3a85ba5bd2c1a7b23ad'}
+lon_start = 1316856.9993981898
+lat_start = 6457531.171883571
+lon_end = 1669386.9500434147
+lat_end = 6742784.414390394
 
-if show_mouse_pos:
-    pos = pyautogui.position()
-    while(True):
-        new_pos = pyautogui.position()
-        if new_pos != pos:
-            print(new_pos)
-        pos = new_pos
+# lon_start = 1432201.0657676156
+# lat_start = 6587513.529834197
+# lon_end = 1438328.6526260807
+# lat_end = 6593988.164781701
 
-if through_atlas:
-    count = 0
-    x_start = 80
-    x_end = 1610
-    y_start = 110
-    y_end = 200  # 1080
-    pyautogui.PAUSE = 0.8
+cells = []
+lon_range = np.arange(lon_start, lon_end, 1000).tolist()
+lat_range = np.arange(lat_start, lat_end, 1000).tolist()
+count = 0
 
-    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
-    pyautogui.click(x_end, y_end)
-    pyautogui.dragTo(x_start, y_end, 2, button='left')
-    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
-    pyautogui.click(x_start, y_end)
-    pyautogui.dragTo(x_start, y_start, 2, button='left')
-    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
-    pyautogui.click(x_start, y_start)
-    pyautogui.dragTo(x_end, y_start, 2, button='left')
-    count = reader.scraping_page(x_start, x_end, y_start, y_end, count)
+lt_obj = {'lon': 0,
+         'lat': 0,
+         'relation': 'grid.grid100m',
+         'grid': 'grid100m',
+         'election_m': 'statistik.d_lt_sn_19_grid100m',
+         'election_o': 'statistik.d_lt_sn_19'}
+bt_obj = {'lon': 0,
+          'lat': 0,
+          'relation': 'grid.grid100m',
+          'grid': 'grid100m',
+          'election_m': 'statistik.d_bt_de_17_grid100m',
+          'election_o': 'statistik.d_bt_de_17'}
 
-if read_htmls:
-    cells = []
-    filenames = glob.glob("C:/Users/sascha/Downloads/wahlatlas/*.html")
-    for filename in filenames:
-        html_file = open(filename, "r")
-        html_data = html_file.read()
-        html_file.close()
+for lon in lon_range:
+    print("iteration number: ", count, " of ", len(lon_range))
+    count += 1
+    for lat in lat_range:
+        lon_val = str(lon)
+        lat_val = str(lat)
+        lt_obj['lon'] = lon_val
+        lt_obj['lat'] = lat_val
+        bt_obj['lon'] = lon_val
+        bt_obj['lat'] = lat_val
 
-        soup = BeautifulSoup(html_data, 'html.parser')
-        pixel_span = soup.find("span", id="hoverWahlberechtigtePixel")
-        potential_span = soup.find("span", id="hoverPotentialScore21wk")
-        sinus_span = soup.find("span", id="hoverPotentialSinus")
-        id_span = soup.find("span", id="quelle")
-        table = soup.find("table", id="partiesTable")
-        if pixel_span.text != "":
-            for row in table.findAll('tr'):
-                td_tags = row.find_all('td')
-                if len(td_tags) > 0:
-                    if "GR" in td_tags[0].get('title'):
-                        gruene_pixel = td_tags[1].contents[1]
+        bt = requests.post('https://gruene.wahlatlas.eu/php/get_results.php', cookies=cookies, data=bt_obj)
+        lt = requests.post('https://gruene.wahlatlas.eu/php/get_results.php', cookies=cookies, data=lt_obj)
+        extra = requests.post('https://gruene.wahlatlas.eu/php/get_extra_infos.php', cookies=cookies, json={'lon': lon, 'lat': lat, 'relation': 'grid.grid100m'})
 
-        if id_span is None:
-            continue
-        cell = Cell(id_span.string[11:])
-        cell.x = float(id_span.string.split("E", 1)[1])  # E is x
-        cell.y = float(id_span.string.split("N", 1)[1].split("E", 1)[0])  # N is y
-
-        if pixel_span.string is None or len(pixel_span.string) == 0:
-            cells.append(cell)
-            continue
-
-        cell.pixel = float(pixel_span.string[35:])
-        cell.sinus = reader.identify_sinus(sinus_span.string)
-        cell.potential = float(potential_span.string[30:].replace(',', '.'))
+        cell = Cell(lon, lat)
+        if bt is not None:
+            try:
+                bt_json = bt.json()
+                cell.gru_bt = bt_json['p_zs_gru_percent']
+                pixel = bt_json['wahlberechtigte']
+                if pixel is not None:
+                    cell.pixel = pixel
+            except:
+                pass
+        if lt is not None:
+            try:
+                cell.gru_lt = lt.json()['p_zs_gru_percent']
+            except:
+                pass
+        if extra is not None:
+            try:
+                extra_json = extra.json()
+                sinus = extra_json['sinus'][0].get('sinus_sn')
+                if sinus is not None:
+                    cell.sinus = sinus
+                potential = extra_json['pot_21'][0].get('bt_21_potential')
+                if potential is not None:
+                    cell.potential = potential
+                potential_scale = extra_json['pot_21'][0].get('bt_21_pot_scale')
+                if potential_scale is not None:
+                    cell.potential_scale = potential_scale
+            except:
+                pass
         cells.append(cell)
 
+    print(len(cells))
     jsonStr = jsonpickle.encode(cells)
     text_file = open("Output.json", "w")
     text_file.write(jsonStr)
     text_file.close()
-    print(jsonStr)
 
 
 

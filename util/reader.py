@@ -28,28 +28,32 @@ class SinusType(Enum):
 
 
 def identify_sinus(text):
+    if text is None:
+        return "UNDEFINED"
+
+    text = text.lower()
     if "konservativ" in text:
-        return SinusType.KET
+        return "KET"
     elif "liberal" in text:
-        return SinusType.LIB
+        return "LIB"
     elif "performer" in text:
-        return SinusType.PER
+        return "PER"
     elif "expeditive" in text:
-        return SinusType.EPE
+        return "EPE"
     elif "adaptiv" in text:
-        return SinusType.PRA
+        return "PRA"
     elif "sozial" in text:
-        return SinusType.SQK
-    elif "prekär" in text:
-        return SinusType.PRE
+        return "SQK"
+    elif "pre" in text:
+        return "PRE"
     elif "mitte" in text:
-        return SinusType.BUM
+        return "BUM"
     elif "trad" in text:
-        return SinusType.TRA
+        return "TRA"
     elif "hedonist" in text:
-        return SinusType.HED
+        return "HED"
     else:
-        return SinusType.UNDEFINED
+        return "UNDEFINED"
 
 
 def read_pixel(text):
