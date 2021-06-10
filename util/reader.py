@@ -1,78 +1,32 @@
-from enum import Enum
-import pyautogui
+from util.cell import Cell
 
 
-def scraping_page(x_start, x_end, y_start, y_end, count):
-    for y in range(y_start, y_end, 40):
-        for x in range(x_start, x_end, 40):  # start by 320 or 80
-            pyautogui.click(x, y)
-            pyautogui.hotkey('ctrl', 's')
-            pyautogui.typewrite(str(count))
-            count += 1
-            pyautogui.press('enter')
-    return count
-
-
-class SinusType(Enum):
-    UNDEFINED = 0
-    KET = "KET"  # Konservativ-Etablierte
-    LIB = "LIB"  # Liberal-Intellektuelle
-    PER = "PER"  # Performer
-    EPE = "EPE"  # Expeditive
-    PRA = "PRA"  # Adaptiv-Pragmatische
-    SQK = "SQK"  # Sozialökologische
-    PRE = "PRE"  # Prekäre
-    BUM = "BUM"  # Bürgerliche Mitte
-    TRA = "TRA"  # Traditionelle
-    HED = "HED"  # Hedonisten
-
-
-def identify_sinus(text):
-    if text is None:
-        return "UNDEFINED"
-
-    text = text.lower()
-    if "konservativ" in text:
-        return "KET"
-    elif "liberal" in text:
-        return "LIB"
-    elif "performer" in text:
-        return "PER"
-    elif "expeditive" in text:
-        return "EPE"
-    elif "adaptiv" in text:
-        return "PRA"
-    elif "sozial" in text:
-        return "SQK"
-    elif "pre" in text:
-        return "PRE"
-    elif "mitte" in text:
-        return "BUM"
-    elif "trad" in text:
-        return "TRA"
-    elif "hedonist" in text:
-        return "HED"
-    else:
-        return "UNDEFINED"
-
-
-def read_pixel(text):
-    if not text or text == '':
-        return 0
+def create_cell(lon, lat, bt, lt, extra):
+    cell = Cell(lon, lat)
+    if bt is None or lt is None or extra is None:
+        return cell
 
     try:
-        return float(text)
+        bt_json = bt.json()
+        cell.gru_bt = bt_json['p_zs_gru_percent']
+        pixel = bt_json['wahlberechtigte']
+        if pixel is not None:
+            cell.pixel = pixel
+
+        cell.gru_lt = lt.json()['p_zs_gru_percent']
+
+        extra_json = extra.json()
+        sinus = extra_json['sinus'][0].get('sinus_sn')
+        if sinus is not None:
+            cell.sinus = sinus
+        potential = extra_json['pot_21'][0].get('bt_21_potential')
+        if potential is not None:
+            cell.potential = potential
+        potential_scale = extra_json['pot_21'][0].get('bt_21_pot_scale')
+        if potential_scale is not None:
+            cell.potential_scale = potential_scale
     except:
-        print("error")
-        return 0
+        pass
+    return cell
 
 
-def read_potential(text):
-    if not text or text == '':
-        return 0
-
-    try:
-        return int(str(int(text))[:2])
-    except:
-        print("error")
-        return 0

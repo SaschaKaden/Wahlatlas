@@ -22,7 +22,7 @@ elseif contains(tag, 'TRA')
 elseif contains(tag, 'HED')
     output = 1.1;
 else
-    output = 0.5;
+    output = 0.2;
 end
     
 end
