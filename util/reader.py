@@ -1,9 +1,9 @@
 from util.cell import Cell
 
 
-def create_cell(lon, lat, bt, lt, extra):
+def create_cell(lon, lat, bt, extra):
     cell = Cell(lon, lat)
-    if bt is None or lt is None or extra is None:
+    if bt is None or extra is None:
         return cell
 
     try:
@@ -12,8 +12,6 @@ def create_cell(lon, lat, bt, lt, extra):
         pixel = bt_json['wahlberechtigte']
         if pixel is not None:
             cell.pixel = pixel
-
-        cell.gru_lt = lt.json()['p_zs_gru_percent']
 
         extra_json = extra.json()
         sinus = extra_json['sinus'][0].get('sinus_sn')
@@ -25,6 +23,9 @@ def create_cell(lon, lat, bt, lt, extra):
         potential_scale = extra_json['pot_21'][0].get('bt_21_pot_scale')
         if potential_scale is not None:
             cell.potential_scale = potential_scale
+        potential_scale_wk = extra_json['pot_21'][0].get('bt_21_pot_scale_wk')
+        if potential_scale_wk is not None:
+            cell.potential_scale = potential_scale_wk
     except:
         pass
     return cell
