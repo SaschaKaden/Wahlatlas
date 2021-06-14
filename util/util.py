@@ -62,10 +62,10 @@ def get_chemnitz_coords():
 
 
 def get_dresden_coords():
-    lon_start = 1509215.8590818818
-    lat_start = 6612468.938934873
-    lon_end = 1509215.8590818818
-    lat_end = 6612468.938934873
+    lon_start = 1507035.5222253099
+    lat_start = 6609272.8889279235
+    lon_end = 1558905.4554693517
+    lat_end = 6655722.634736986
     return [lon_start, lat_start, lon_end, lat_end]
 
 
