@@ -25,7 +25,7 @@ def create_cell(lon, lat, bt, extra):
             cell.potential_scale = potential_scale
         potential_scale_wk = extra_json['pot_21'][0].get('bt_21_pot_scale_wk')
         if potential_scale_wk is not None:
-            cell.potential_scale = potential_scale_wk
+            cell.potential_scale_wk = potential_scale_wk
     except:
         pass
     return cell

@@ -1,8 +1,8 @@
-% data_dresden = jsondecode(fileread("results/Dresden_250m.json"));
+data_dresden = jsondecode(fileread("results/Dresden_250.json"));
 % data_leipzig = jsondecode(fileread("results/Leipzig_500m.json"));
 % data_complete = jsondecode(fileread("results/Sachsen_1km.json"));
 format compact
-data = jsondecode(fileread("Output.json"));
+data = data_dresden; %jsondecode(fileread("Output.json"));
 size = length(data);
 
 X = zeros(size,1);

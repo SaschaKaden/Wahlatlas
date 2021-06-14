@@ -3,46 +3,46 @@ from util import reader
 from util.cell import Cell
 import requests
 
-cookies = {'PHPSESSID': '41d5jkn0hn5fsm25mn8jut90f3', 'SimpleSAML': '7826ce32eec0f34f8186179b79fb1cb2',
-           'SimpleSAMLAuthToken': '_d35fb8d8a02652c56de3538e844e0c20c5b2463ef9'}
+
+cookies = {'PHPSESSID': '41d5jkn0hn5fsm25mn8jut90f3', 'SimpleSAML': 'd5133f4060ef43c1a0d62df9c036c87c',
+           'SimpleSAMLAuthToken': '_d064838239327228fc87aaee0c839a33e41060f480'}
 grid_size = 250
-
-cells = []
-count = 0
-
 bt_obj, extra_obj = util.get_req_objects(grid_size)
 
-lon_range, lat_range = util.generate_ranges(util.get_dresden_coords(), grid_size)
-for lon in lon_range:
-    print("iteration number: ", count, " of ", len(lon_range))
-    count += 1
-    for lat in lat_range:
-        bt_obj['lon'] = str(lon)
-        bt_obj['lat'] = str(lat)
-        extra_obj['lon'] = str(lon)
-        extra_obj['lat'] = str(lat)
 
-        bt = requests.post('https://gruene.wahlatlas.eu/php/get_results.php', cookies=cookies, data=bt_obj)
-        extra = requests.post('https://gruene.wahlatlas.eu/php/get_extra_infos.php', cookies=cookies, json=extra_obj)
-        cells.append(reader.create_cell(lon, lat, bt, extra))
+def collect(name, lon_lat_values):
+    cells = []
+    count = 0
+    lon_range, lat_range = util.generate_ranges(lon_lat_values, grid_size)
 
-    util.write_file("Dresden.json", cells)
+    print(name)
+    for lon in lon_range:
+        print("iteration number: ", count, " of ", len(lon_range), " |  current cell size: ", len(cells))
+        count += 1
+        for lat in lat_range:
+            bt_obj['lon'] = str(lon)
+            bt_obj['lat'] = str(lat)
+            extra_obj['lon'] = str(lon)
+            extra_obj['lat'] = str(lat)
+
+            bt = requests.post('https://gruene.wahlatlas.eu/php/get_results.php', cookies=cookies, data=bt_obj)
+            extra = requests.post('https://gruene.wahlatlas.eu/php/get_extra_infos.php', cookies=cookies,
+                                  json=extra_obj)
+            cells.append(reader.create_cell(lon, lat, bt, extra))
+
+        util.write_file(name + ".json", cells)
 
 
-cells.clear()
-lon_range, lat_range = util.generate_ranges(util.get_leipzig_coords(), grid_size)
-for lon in lon_range:
-    print("iteration number: ", count, " of ", len(lon_range))
-    count += 1
-    for lat in lat_range:
-        bt_obj['lon'] = str(lon)
-        bt_obj['lat'] = str(lat)
-        extra_obj['lon'] = str(lon)
-        extra_obj['lat'] = str(lat)
-
-        bt = requests.post('https://gruene.wahlatlas.eu/php/get_results.php', cookies=cookies, data=bt_obj)
-        extra = requests.post('https://gruene.wahlatlas.eu/php/get_extra_infos.php', cookies=cookies, json=extra_obj)
-        cells.append(reader.create_cell(lon, lat, bt, extra))
-
-    util.write_file("Leipzig.json", cells)
-
+# collect("results/bautzen", util.get_bautzen_coords())
+collect("results/chemnitz", util.get_chemnitz_coords())
+collect("results/dresden", util.get_dresden_coords())
+# collect("results/erzgebirge", util.get_erzgebirge_coords())
+# collect("results/goerlitz", util.get_goerlitz_coords())
+# collect("results/landkreis leipzig", util.get_landkreis_leipzig_coords())
+collect("results/leipzig", util.get_leipzig_coords())
+# collect("results/meissen", util.get_meissen_coords())
+# collect("results/mittelsachsen", util.get_mittelsachsen_coords())
+collect("results/nordsachsen", util.get_nordsachsen_coords())
+# collect("results/saechsische schweiz", util.get_saechsische_schweiz_coords())
+# collect("results/vogtland", util.get_vogtland_coords())
+# collect("results/zwickau", util.get_zwickau_coords())
