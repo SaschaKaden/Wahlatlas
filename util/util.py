@@ -23,8 +23,8 @@ def get_req_objects(grid_size):
 
 
 def generate_ranges(coords, grid_size):
-    lon_range = np.arange(coords[0], coords[2], grid_size).tolist()
-    lat_range = np.arange(coords[1], coords[3], grid_size).tolist()
+    lon_range = np.arange(coords[0], coords[2], grid_size / 2).tolist()
+    lat_range = np.arange(coords[1], coords[3], grid_size / 2).tolist()
     return lon_range, lat_range
 
 
@@ -33,7 +33,7 @@ def write_file(file_name, cells):
     text_file = open(file_name, "w")
     text_file.write(json_str)
     text_file.close()
-    if len(cells) < 300:
+    if len(cells) < 1000:
         print(jsonpickle.encode(cells))
 
 
