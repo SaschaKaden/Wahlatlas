@@ -23,8 +23,8 @@ def get_req_objects(grid_size):
 
 
 def generate_ranges(coords, grid_size):
-    lon_range = np.arange(coords[0], coords[2], grid_size / 2).tolist()
-    lat_range = np.arange(coords[1], coords[3], grid_size / 2).tolist()
+    lon_range = np.arange(coords[0], coords[2], grid_size - 5).tolist()
+    lat_range = np.arange(coords[1], coords[3], grid_size - 5).tolist()
     return lon_range, lat_range
 
 
