@@ -1,5 +1,7 @@
 import numpy as np
 import jsonpickle
+from pyproj import Proj, transform
+from pyproj import Transformer
 
 
 def get_req_objects(grid_size):
@@ -35,6 +37,41 @@ def write_file(file_name, cells):
     text_file.close()
     if len(cells) < 1000:
         print(jsonpickle.encode(cells))
+
+
+def print_en_to_deg(coords):
+    [x1, y1, x2, y2] = coords
+    transformer = Transformer.from_crs(3035, 4326, always_xy=True)
+    points = [(x1, y1), (x2, y2)]
+    for pt in transformer.itransform(points):
+        print(pt)
+
+
+def conv_en_coords(point):
+    transformer = Transformer.from_crs(3035, 4326, always_xy=True)
+    points = [point]
+    for pt in transformer.itransform(points):
+        return pt
+
+
+def conv_coords(point):
+    transformer = Transformer.from_crs(3857, 4326, always_xy=True)
+    points = [point]
+    for pt in transformer.itransform(points):
+        return pt
+
+
+def print_min_max_coords(name, coords):
+    [x1, y1, x2, y2] = coords
+    x1 -= 125
+    y1 -= 125
+    x2 += 125
+    y2 += 125
+    transformer = Transformer.from_crs(3857, 4326, always_xy=True)
+    points = [(x1, y1), (x2, y2)]
+    print(name)
+    for pt in transformer.itransform(points):
+        print(pt)
 
 
 def get_saxony_coords():
@@ -118,10 +155,10 @@ def get_mittelsachsen_coords():
 
 
 def get_nordsachsen_coords():
-    lon_start = 1353248.4189839286
-    lat_start = 6651813.542354944
-    lon_end = 1353248.4189839286
-    lat_end = 6651813.542354944
+    lon_start = 1351664.977748667
+    lat_start = 6651464.789182975
+    lon_end = 1477861.1892860234
+    lat_end = 6738184.883644181
     return [lon_start, lat_start, lon_end, lat_end]
 
 
